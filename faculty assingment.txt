@@ -1,0 +1,195 @@
+1. list all courses for which no room is assigned and all rooms which are available.
+hint: use union
+
+ select cid,cname
+    -> from courses
+    -> where rid is null
+    -> union
+    -> select  r.rid, r.rname
+    -> from room r
+    -> where not exists(select * from courses c
+    ->                    where r.rid=c.rid);
++-----+-------+
+| cid | cname |
++-----+-------+
+| 141 | DTISS |
+| 103 | Mogra |
++-----+-------+
+=============================================================================================
+
+2. list all faculties who are not allocated to any course and rooms which are not allocated to any course.
+
+select f.fname
+    -> from faculty f
+    -> where not exists(select c.fid
+    -> from courses c
+    -> where f.fid=c.fid)
+    -> union
+    -> select r.rname
+    -> from room r
+    -> where not exists(select c.rid
+    ->                   from courses c
+    ->                   where r.rid=c.rid);
++-------+
+| fname |
++-------+
+| Asha  |
+| Seeta |
+| Mogra |
++-------+
+===========================================================================================
+3. list all rooms which are allocated or not allocated to any courses.
+
+        select * from room r
+        where  exists(select c.rid
+                       from courses c
+                       where c.rid=r.rid)
+        union
+        
+        select * from room r
+        where not exists(select c.rid
+                       from courses c
+                       where c.rid=r.rid);
++-----+--------+-----------+
+| rid | rname  | rloc      |
++-----+--------+-----------+
+| 100 | Jasmin | 1st floor |
+| 101 | Rose   | 2nd floor |
+| 105 | Lotus  | 1st floor |
+| 103 | Mogra  | 1st floor |
++-----+--------+-----------+
+
+===========================================================================================
+4. list all rooms which are not allocated to any courses.
+
+       select * from room r
+    -> where not exists(select c.rid
+    ->                   from courses c
+    ->                    where c.rid=r.rid);
+
++-----+-------+-----------+
+| rid | rname | rloc      |
++-----+-------+-----------+
+| 103 | Mogra | 1st floor |
++-----+-------+-----------+
+==========================================================================================
+
+5. display courses and faculty assigned to those courses whose special skill is database.
+
+select * from courses c ,faculty f
+    -> where c.fid=f.fid and (sp_skill1='database' or sp_skill2='database');
++-----+-------+------+------+-----+-------+-----------+-----------+
+| cid | cname | rid  | fid  | fid | fname | sp_skill1 | sp_skill2 |
++-----+-------+------+------+-----+-------+-----------+-----------+
+| 121 | DBDA  |  100 |   10 |  10 | Amol  | database  | JAVA      |
+| 151 | DIOT  |  105 |   12 |  12 | Kiran | CPP       | Database  |
++-----+-------+------+------+-----+-------+-----------+-----------+
+==========================================================================================
+6. display time table--- it should contain course details, faculty and room details
+
+select * from courses c ,faculty f, room r
+where c.rid=r.rid and c.fid =f.fid;
+
++-----+-------+------+------+-----+-------+-----------+-----------+-----+--------+-----------+
+| cid | cname | rid  | fid  | fid | fname | sp_skill1 | sp_skill2 | rid | rname  | rloc      |
++-----+-------+------+------+-----+-------+-----------+-----------+-----+--------+-----------+
+| 121 | DBDA  |  100 |   10 |  10 | Amol  | database  | JAVA      | 100 | Jasmin | 1st floor |
+| 151 | DIOT  |  105 |   12 |  12 | Kiran | CPP       | Database  | 105 | Lotus  | 1st floor |
++-----+-------+------+------+-----+-------+-----------+-----------+-----+--------+-----------+
+==========================================================================================
+
+
+
+
+*********************************PRODUCT TABLE*******************************************
+mysql> select * from product;
++-----+------------+-------+------+------+------+
+| pid | pname      | price | qty  | cid  | sid  |
++-----+------------+-------+------+------+------+
+| 111 | pepsi      | 40.00 |   50 |    4 |   11 |
+| 123 | lays       | 30.00 |   30 |    1 |   12 |
+| 124 | dairy milk | 40.00 |   60 |    2 |   14 |
+| 125 | pringles   | 40.00 |   60 |    1 |   14 |
+| 134 | nachos     | 50.00 |   50 |    1 |   12 |
++-----+------------+-------+------+------+------+
+
+mysql> select * from salesman;
++-----+--------+----------+
+| sid | sname  | city     |
++-----+--------+----------+
+|  11 | Rahul  | Pune     |
+|  12 | Kirti  | Mumbai   |
+|  13 | Prasad | Nashik   |
+|  14 | Arnav  | Amravati |
++-----+--------+----------+
+
+mysql> select * from category;
++-----+-------------+-------------------------+
+| cid | cname       | description             |
++-----+-------------+-------------------------+
+|   1 | chips       | crunchy                 |
+|   2 | chocolate   | very chocolaty          |
+|   3 | snacks      | yummy                   |
+|   4 | cold drinks | thanda thanda cool cool |
++-----+-------------+-------------------------+
+
+
+1. List all products with category chips
+
+select * from product 
+where cid=(select cid
+           from category
+           where cname='chips');
+ +-----+----------+-------+------+------+------+
+| pid | pname    | price | qty  | cid  | sid  |
++-----+----------+-------+------+------+------+
+| 123 | lays     | 30.00 |   30 |    1 |   12 |
+| 125 | pringles | 40.00 |   60 |    1 |   14 |
+| 134 | nachos   | 50.00 |   50 |    1 |   12 |
++-----+----------+-------+------+------+------+
+
+==========================================================================================
+
+2. display all products sold by kirti
+
+    select * from product 
+    where sid=(select sid
+               from salesman
+               where sname='kirti');
++-----+--------+-------+------+------+------+
+| pid | pname  | price | qty  | cid  | sid  |
++-----+--------+-------+------+------+------+
+| 123 | lays   | 30.00 |   30 |    1 |   12 |
+| 134 | nachos | 50.00 |   50 |    1 |   12 |
++-----+--------+-------+------+------+------+
+2 rows in set (0.00 sec)
+==========================================================================================
+
+3. display all salesman who did not sell any product
+     
+  select * from salesman 
+  where sid not in(select sid
+              from product);
+
++-----+--------+--------+
+| sid | sname  | city   |
++-----+--------+--------+
+|  13 | Prasad | Nashik |
++-----+--------+--------+
+==========================================================================================
+
+4. display all category for which no product is there
+
+5. display all products with no category assigned
+
+6. list all salesman who stays in city with name starts with P or N
+
+7. add new column in salesman table by name credit limit.
+
+8. Write a query which will display dept no and dept names to which no employee is assigned for emp and dept table.
+
+
+
+
+
+
